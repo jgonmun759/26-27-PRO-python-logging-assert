@@ -1,4 +1,4 @@
-import logging
+import logging, sys
 
 
 STOCK_MINIMO: int = 3
@@ -24,7 +24,13 @@ def comprobar_stock(stock: int) -> None:
 
 
 def vender(stock: int, cantidad: int) -> int:
-    """Realiza una venta y devuelve el stock actualizado."""
+    """
+    Realiza una venta y devuelve el stock actualizado.
+    
+    Raises:
+        ValueError: Cuando la cantidad sea negativa, o no haya stock
+                    suficiente.
+    """
     logging.debug(
         "Venta solicitada: stock=%d, cantidad=%d",
         stock, cantidad
@@ -52,7 +58,12 @@ def vender(stock: int, cantidad: int) -> int:
 
 
 def reponer(stock: int, cantidad: int) -> int:
-    """Repone unidades y devuelve el stock actualizado."""
+    """
+    Repone unidades y devuelve el stock actualizado.
+    
+    Raises:
+        ValueError: Cuando la cantidad sea negativa.
+    """
     logging.debug(
         "Reposición solicitada: stock=%d, cantidad=%d",
         stock, cantidad
@@ -70,7 +81,13 @@ def reponer(stock: int, cantidad: int) -> int:
 
 
 def procesar_opcion(opcion: str, stock: int) -> int:
-    """Procesa una opción del menú y devuelve el stock actualizado."""
+    """
+    Procesa una opción del menú y devuelve el stock actualizado.
+    
+    Raises:
+        ValueError: Cuando la cantidad sea negativa, o no haya stock
+                    suficiente.    
+    """
     if opcion == "1":
         cantidad: int = int(input("Unidades a vender: "))
         stock = vender(stock, cantidad)
@@ -92,19 +109,51 @@ def procesar_opcion(opcion: str, stock: int) -> int:
 def main() -> None:
     """Ejecuta la aplicación de gestión de stock."""
     stock: int = 10
+    
+    formato = logging.Formatter(
+        "%(asctime)s - %(levelname)s - %(message)s"
+    )
 
-    # TODO: Configurar logging.
+    # Handler para el archivo
+    archivo = logging.FileHandler(
+        "tienda.log",
+        mode="a",
+        encoding="utf-8"
+    )
+    archivo.setLevel(logging.DEBUG)
+    archivo.setFormatter(formato)
+
+    # Handler para la terminal
+    consola = logging.StreamHandler(sys.stderr)
+    consola.setLevel(logging.ERROR)
+    consola.setFormatter(formato)
+
+    # Logger principal
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
+    logger.addHandler(archivo)
+    logger.addHandler(consola)
 
     # Comprobar el inventario inicial.
     if stock < 0:
         logging.critical("Inventario inicial inválido: %d", stock)
         raise ValueError("No se puede iniciar la tienda")
 
-    # TODO: Construir el bucle del menú.
-    # Mostrar menú y solicitar una opción.
-    # Finalizar cuando la opción sea "0".
-    # Procesar las demás opciones.
-    # Capturar las excepciones ValueError.
+    opcion: str = ""
+
+    while opcion != "0":
+        mostrar_menu()
+        opcion = pedir_opcion()
+
+        if opcion in ("1", "2", "3"):
+            try:
+                stock = procesar_opcion(opcion, stock)
+            except ValueError as e:
+                print(f"Error: {e}")
+
+        elif opcion != "0":
+            print("Opción no válida")
+
 
     print("Stock final:", stock)
 
